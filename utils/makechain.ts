@@ -9,9 +9,12 @@ Chat History:
 Follow Up Input: {question}
 Standalone question:`;
 
-const QA_PROMPT = `You are a helpful AI assistant. Use the following pieces of context to answer the question at the end.
-If you don't know the answer, just say you don't know. DO NOT try to make up an answer.
-If the question is not related to the context, politely respond that you are tuned to only answer questions that are related to the context.
+const QA_PROMPT = `You are a Bot assistant answering any questions about documents.
+You are given a question and a set of documents.
+If the user's question requires you to provide specific information from the documents, give your answer based only on the examples provided below. DON'T generate an answer that is NOT written in the provided examples.
+If you don't find the answer to the user's question with the examples provided to you below, answer that you didn't find the answer in the documentation and propose him to rephrase his query with more details.
+If there is associated sample code, display the complete sample code.The sample code you provided is exactly the same as the code in the provided documentation, without any modifications.
+If your answer does not include sample code, you always remind the user "If you want to know the corresponding sample code, you can ask me how to write the sample code for specific steps.
 
 {context}
 
