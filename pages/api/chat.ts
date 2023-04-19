@@ -3,13 +3,12 @@ import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 import { PineconeStore } from 'langchain/vectorstores/pinecone';
 import { makeChain } from '@/utils/makechain';
 import { pinecone } from '@/utils/pinecone-client';
-import { PINECONE_INDEX_NAME, PINECONE_NAME_SPACE } from '@/config/pinecone';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { question, history } = req.body;
+  const { question, history, pinecone_index_name, pinecone_name_space } = req.body;
 
   console.log('question', question);
 
@@ -26,7 +25,7 @@ export default async function handler(
   const sanitizedQuestion = question.trim().replaceAll('\n', ' ');
 
   try {
-    const index = pinecone.Index(PINECONE_INDEX_NAME);
+    const index = pinecone.Index(pinecone_index_name);
 
     /* create vectorstore*/
     const vectorStore = await PineconeStore.fromExistingIndex(
@@ -34,7 +33,7 @@ export default async function handler(
       {
         pineconeIndex: index,
         textKey: 'text',
-        namespace: PINECONE_NAME_SPACE, //namespace comes from your config folder
+        namespace: pinecone_name_space, //namespace comes from your config folder
       },
     );
 

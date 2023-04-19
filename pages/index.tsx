@@ -13,6 +13,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 
+import { PINECONE_INDEX_NAME, PINECONE_NAME_SPACE } from '@/config/pinecone';
+
 export default function Home() {
   const [query, setQuery] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -77,6 +79,8 @@ export default function Home() {
         body: JSON.stringify({
           question,
           history,
+          pinecone_index_name: PINECONE_INDEX_NAME,
+          pinecone_name_space: PINECONE_NAME_SPACE,
         }),
       });
       const data = await response.json();

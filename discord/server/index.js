@@ -2,6 +2,8 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { Client, Collection, Events, IntentsBitField } from 'discord.js'
+import { DiscordSlashCommandName, DiscordSlashCommandPineconeInfo } from '../defines/commands_info.cjs';
+
 
 // 定义一个名为DiscordBot的类
 export default class DiscordBot {
@@ -24,6 +26,7 @@ export default class DiscordBot {
 
         this._discordClient = discordClient;
         this._port = port;
+        this._askingUserMap = {};
 
         this._setCommandsToBot();
     }
@@ -40,8 +43,20 @@ export default class DiscordBot {
         }
 
         try {
-            // await command.execute(interaction);
-            await interaction.reply({ content: 'Command executed successfully!', ephemeral: false })
+            if (interaction.commandName == DiscordSlashCommandName.kHelp) {
+                // Show help
+            }
+            else if (interaction.commandName == DiscordSlashCommandName.kStopAsking) {
+                if (this._askingUserMap[interaction.user.id]) {
+                    delete this._askingUserMap[interaction.user.id];
+                }
+            } else {
+                if (interaction.commandName in DiscordSlashCommandPineconeInfo) {
+                    this._askingUserMap[interaction.user.id] = DiscordSlashCommandPineconeInfo[interaction.commandName];
+                }
+            }
+
+            await command.execute(interaction);
         } catch (error) {
             console.error(error);
             if (interaction.replied || interaction.deferred) {
@@ -55,6 +70,9 @@ export default class DiscordBot {
     async messageHandler(message) {
         if (message.author.bot) return;
         if (message.content.startsWith('!')) return;
+        // 如果message.author.id不在this._askingUserMap的Key列表中，则直接返回。这表示客户没有用slash command开始咨询
+        const userAskingInfo = this._askingUserMap[message.author.id];
+        if (!userAskingInfo) return;
 
         console.log('message: ', message)
 
@@ -83,6 +101,8 @@ export default class DiscordBot {
                 body: JSON.stringify({
                     question: message.content,
                     history,
+                    pinecone_index_name: userAskingInfo.pinecone_index_name,
+                    pinecone_name_space: userAskingInfo.pinecone_name_space,
                 }),
             });
             const data = await response.json();
