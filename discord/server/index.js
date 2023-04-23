@@ -109,7 +109,7 @@ export default class DiscordBot {
                 }),
             });
             const data = await response.json();
-            console.log('data', data);
+            console.log('data>>>', data);
 
             if (data.error) {
                 console.log("Fetch data from /api/chat error: ", data.error);
@@ -117,7 +117,21 @@ export default class DiscordBot {
                 var answer = data.text;
                 // 如果answer以符号.结尾，那么在符号.前加一个空格。
                 answer = answer.replace(/\.\s*$/, ' .');
-                message.reply(answer);
+                // 如果answer的长度大于 2000 个字符，那么在第2000个字符往后寻找\n作为分割符将answer分割成两个字符串存到answers中
+                var answers = [];
+                if (answer.length > 2000) {
+                    const firstPart = answer.substring(0, 2000);
+                    // 从firstPart中找到最后一个\n位置
+                    const lastNewLinePos = firstPart.lastIndexOf('\n');
+                    answers.push(firstPart.substring(0, lastNewLinePos));
+                    answers.push(answer.substring(lastNewLinePos + 1));
+                } else {
+                    answers.push(answer);
+                }
+                answers.forEach(answer => {
+                    message.reply(answer);
+
+                });
             }
         } catch (e) {
             console.log(e)
