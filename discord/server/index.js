@@ -74,7 +74,6 @@ export default class DiscordBot {
         const userAskingInfo = this._askingUserMap[message.author.id];
         if (!userAskingInfo) return;
 
-        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', userAskingInfo)
         console.log('message: ', message)
 
         await message.channel.sendTyping();
@@ -82,15 +81,18 @@ export default class DiscordBot {
         // Fetch history message
         let history = [];
         let prevMessages = await message.channel.messages.fetch({ limit: 20 });
-        prevMessages.reverse();
+        // prevMessages.reverse();
 
+        var maxHistoryCount = 0;
         prevMessages.forEach(msg => {
+            if (maxHistoryCount >= 4) return;
             if (message.content.startsWith('!')) return;
             if (msg.author.id != this._discordClient.user.id && message.author.bot) return;
             // 只需要当前发消息这个用户相关的历史
             if (msg.author.id != message.author.id) return;
 
             history.push(msg.content);
+            maxHistoryCount ++;
         });
 
         try {
