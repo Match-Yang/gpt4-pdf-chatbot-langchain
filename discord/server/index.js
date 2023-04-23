@@ -74,6 +74,7 @@ export default class DiscordBot {
         const userAskingInfo = this._askingUserMap[message.author.id];
         if (!userAskingInfo) return;
 
+        console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', userAskingInfo)
         console.log('message: ', message)
 
         await message.channel.sendTyping();
@@ -111,7 +112,10 @@ export default class DiscordBot {
             if (data.error) {
                 console.log("Fetch data from /api/chat error: ", data.error);
             } else {
-                message.reply(data.text)
+                var answer = data.text;
+                // 如果answer以符号.结尾，那么在符号.前加一个空格。
+                answer = answer.replace(/\.\s*$/, ' .');
+                message.reply(answer);
             }
         } catch (e) {
             console.log(e)
