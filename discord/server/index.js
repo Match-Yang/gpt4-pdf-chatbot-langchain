@@ -3,15 +3,18 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { Client, Collection, Events, IntentsBitField } from 'discord.js'
 import { DiscordSlashCommandName, DiscordSlashCommandPineconeInfo } from '../defines/commands_info.cjs';
-
+import cron from 'cron';
 
 // 定义一个名为DiscordBot的类
 export default class DiscordBot {
     constructor(port) {
         const discordClient = new Client({
+            disableEveryone: false,
             intents: [
                 IntentsBitField.Flags.Guilds,
+                IntentsBitField.Flags.GuildMembers,
                 IntentsBitField.Flags.GuildMessages,
+                IntentsBitField.Flags.DirectMessages,
                 IntentsBitField.Flags.MessageContent,
             ]
         });
@@ -20,6 +23,8 @@ export default class DiscordBot {
         discordClient.on(Events.MessageCreate, this.messageHandler.bind(this));
         discordClient.on(Events.ClientReady, () => {
             console.log('Discord bot is ready');
+
+            this.mentionEveryoneAt8AM();
         });
 
         discordClient.login(process.env.DISCORD_BOT_TOKEN);
@@ -29,6 +34,20 @@ export default class DiscordBot {
         this._askingUserMap = {};
 
         this._setCommandsToBot();
+    }
+
+    mentionEveryoneAt8AM() {
+        console.log('Current: ', new Date())
+        let scheduledMessage = new cron.CronJob('8 9 * * *', () => {
+            this._discordClient.channels.cache.forEach((channel) => {
+                if (channel.type === 0 && channel.parentId === '980014613179555871') {
+                    channel.send('@everyone I am your AI technical support. Type the command "/help" to start asking me questions!')
+                }
+            })
+        });
+
+        // When you want to start it, use:
+        scheduledMessage.start()
     }
 
     async commandHandler(interaction) {
@@ -92,7 +111,7 @@ export default class DiscordBot {
             if (msg.author.id != message.author.id) return;
 
             history.push(msg.content);
-            maxHistoryCount ++;
+            maxHistoryCount++;
         });
 
         try {
@@ -115,8 +134,10 @@ export default class DiscordBot {
                 console.log("Fetch data from /api/chat error: ", data.error);
             } else {
                 var answer = data.text;
-                // 如果answer以符号.结尾，那么在符号.前加一个空格。
-                answer = answer.replace(/\.\s*$/, ' .');
+                // 在所有图片链接结尾添加一个空格，这样机器人会显示预览
+                const regex = /https:\/\/\S+\.(jpg|png|gif)/g; // 匹配所有以 .jpg、.png 或 .gif 结尾的 https 链接
+                answer = answer.replace(regex, (match) => `${match} `);
+
                 // 如果answer的长度大于 2000 个字符，那么在第2000个字符往后寻找\n作为分割符将answer分割成两个字符串存到answers中
                 var answers = [];
                 if (answer.length > 2000) {
